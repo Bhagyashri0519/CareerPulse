@@ -119,7 +119,3 @@ CareerPulse/
 | DevOps | Docker, Docker Compose, GitHub Actions |
 
 ---
-
-## 📄 License
-
-MIT — see [LICENSE](./LICENSE) for details.
