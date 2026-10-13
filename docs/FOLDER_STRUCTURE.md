@@ -24,16 +24,12 @@ CareerPulse/
 │       ├── vite-env.d.ts            Vite type declarations
 │       │
 │       ├── components/              Shared, reusable UI components
-│       │   ├── layout/              Page-level shells
-│       │   │   ├── DashboardLayout.tsx  Sidebar + topbar wrapper
-│       │   │   ├── Sidebar.tsx          Navigation sidebar
-│       │   │   ├── PublicNavbar.tsx     Landing/public navbar
-│       │   │   └── index.ts             Barrel export
+│       │   ├── layout/              Page-level shells (DashboardLayout, Sidebar, PublicNavbar)
 │       │   ├── ui/                  Design-system atoms (Button, Badge, Input…)
 │       │   ├── charts/              Recharts wrappers (SkillRadar, ProgressRing…)
 │       │   └── common/              Cross-feature helpers (AIAssistant, Loader…)
 │       │
-│       ├── features/                Feature-scoped code — grows as modules mature
+│       ├── features/                Feature-scoped modules
 │       │   ├── auth/                Login, register, password reset
 │       │   ├── profile/             Student profile view & edit
 │       │   ├── resume/              Resume upload & parsed skills
@@ -48,16 +44,11 @@ CareerPulse/
 │       │   └── admin/               Admin dashboard
 │       │
 │       ├── pages/                   Full-page components (routed in App.tsx)
-│       │                            Migrate into features/ as each module matures
-│       ├── context/
-│       │   └── AppContext.tsx        Global auth + UI state (React Context)
+│       ├── context/                 Global auth + UI state (React Context)
 │       ├── hooks/                   Shared custom hooks (useDebounce, useFetch…)
-│       ├── services/
-│       │   └── api.ts               Centralised HTTP client (fetch + JWT)
-│       ├── types/
-│       │   └── index.ts             Shared TypeScript interfaces
-│       └── utils/
-│           └── formatters.ts        Pure formatting utility functions
+│       ├── services/                Centralised HTTP client (api.ts)
+│       ├── types/                   Shared TypeScript interfaces
+│       └── utils/                   Pure formatting utility functions
 │
 │
 │  ┌─────────────────────────────────────────────────────────────────────┐
@@ -68,11 +59,13 @@ CareerPulse/
 │   ├── .env.example                 Environment variable template
 │   ├── package.json                 Express, Mongoose, JWT, Helmet, ts-node-dev
 │   ├── tsconfig.json
+│   ├── jest.config.js               ts-jest test configuration
 │   ├── README.md
 │   └── src/
 │       ├── app.ts                   Express app — CORS, Helmet, rate-limit, errors
-│       ├── server.ts                Entry point — env validation + MongoDB connect
-│       ├── config/                  DB, JWT, env config helpers
+│       ├── server.ts                Entry point — graceful server boot & shutdown
+│       ├── config/
+│       │   └── db.ts                Mongoose connection manager & resilient fallback
 │       ├── modules/                 Feature modules — one per domain
 │       │   ├── auth/                Register, login, token refresh
 │       │   ├── users/               User CRUD
@@ -90,14 +83,19 @@ CareerPulse/
 │       │   └── admin/               Admin operations
 │       ├── middleware/
 │       │   ├── auth.middleware.ts   JWT authenticate() + authorise()
-│       │   └── validate.middleware.ts  express-validator error formatter
+│       │   ├── validate.middleware.ts  express-validator error formatter
+│       │   └── error.middleware.ts  Centralized error handling middleware
 │       ├── integrations/            Third-party client wrappers
 │       ├── routes/
-│       │   └── index.ts             Root API router — mounts all module routers
-│       ├── utils/                   Backend utility functions
-│       └── types/                   Backend-specific TypeScript types
+│       │   └── index.ts             Root API router — mounts all module routers (/api/v1)
+│       ├── utils/
+│       │   ├── api-response.ts      Standard ApiResponse formatting helpers
+│       │   └── errors.ts            AppError, NotFoundError, ValidationError classes
+│       └── types/
+│           └── common.types.ts      Standard ApiResponse and health types
 │   └── tests/
-│       ├── unit/                    Per-module unit tests (Jest)
+│       ├── unit/
+│       │   └── api-response.test.ts Tests for response formatting & custom errors
 │       └── integration/             API integration tests
 │
 │
@@ -112,8 +110,8 @@ CareerPulse/
 │   ├── README.md
 │   └── app/
 │       ├── main.py                  FastAPI app — CORS, lifespan, router registration
-│       ├── api/                     Thin HTTP endpoint handlers
-│       │   └── health.py            GET /health
+│       ├── api/
+│       │   └── health.py            GET /health endpoint
 │       ├── schemas/                 Pydantic request/response models
 │       ├── services/                Business logic (skill extraction, scoring…)
 │       ├── pipelines/               Multi-step ML processing pipelines
@@ -124,10 +122,12 @@ CareerPulse/
 │       └── utils/                   Shared Python utilities
 │   ├── data/
 │   │   ├── sample/                  Safe sample data for development
-│   │   └── processed/               Processed datasets (gitignored)
+│   │   ├── processed/               Processed datasets (gitignored)
+│   │   └── private/                 Private student datasets (gitignored)
 │   ├── notebooks/                   Exploratory Jupyter notebooks (not production)
 │   ├── artifacts/                   Saved model files (gitignored if large)
-│   └── tests/                       pytest test suite
+│   └── tests/
+│       └── test_health.py           FastAPI health check tests
 │
 │
 │  ┌─────────────────────────────────────────────────────────────────────┐
@@ -135,10 +135,12 @@ CareerPulse/
 │  └─────────────────────────────────────────────────────────────────────┘
 │
 ├── database/
+│   ├── README.md                    Database guidelines and schema documentation
 │   ├── docs/                        Entity diagrams, schema descriptions
 │   ├── seeds/
 │   │   └── skills.seed.ts           Sample skill taxonomy (safe sample data only)
-│   └── scripts/                     DB migration/maintenance scripts
+│   └── scripts/
+│       └── seed.ts                  MongoDB automated seed runner
 │
 ├── docs/
 │   ├── ARCHITECTURE.md              System design, service communication
@@ -148,7 +150,11 @@ CareerPulse/
 │   ├── ENVIRONMENT_SETUP.md         Step-by-step local setup guide
 │   └── FOLDER_STRUCTURE.md          This file
 │
-├── scripts/                         Dev and CI helper scripts
+├── scripts/
+│   ├── README.md                    Documentation for automation scripts
+│   ├── setup-env.sh                 Generates .env files from templates
+│   ├── check-health.sh              Multi-service health checker
+│   └── run-dev.sh                   Dev service orchestrator
 │
 ├── .github/
 │   └── workflows/
@@ -157,7 +163,8 @@ CareerPulse/
 ├── .editorconfig                    Consistent indentation across editors & languages
 ├── .gitattributes                   Git LFS tracking rules
 ├── .gitignore                       Excludes secrets, build output, private data
-├── docker-compose.yml               Orchestrates all four services
+├── docker-compose.yml               Orchestrates all services
+├── package.json                     Root monorepo scripts runner
 └── README.md                        Project overview & quick start
 ```
 
@@ -174,3 +181,4 @@ CareerPulse/
 | AI endpoint | `ai-engine/app/api/<name>.py` → register in `ai-engine/app/main.py` |
 | Database seed | `database/seeds/<name>.seed.ts` |
 | Documentation | `docs/<NAME>.md` |
+| Automation script | `scripts/<name>.sh` |

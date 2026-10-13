@@ -1,151 +1,196 @@
 # Environment Setup — CareerPulse
 
-This guide walks you through running the complete platform locally.
+This guide walks every team member through setting up and running CareerPulse locally.
 
 ---
 
-## Prerequisites
+## ⚡ Quick Start (TL;DR)
 
-| Tool | Version | Install |
-|---|---|---|
-| Node.js | ≥ 20 | [nodejs.org](https://nodejs.org) |
-| pnpm | ≥ 9 | `npm i -g pnpm` |
-| Python | ≥ 3.12 | [python.org](https://python.org) |
-| MongoDB | ≥ 7 | [mongodb.com](https://mongodb.com/try/download/community) or MongoDB Atlas |
-| Git | any | [git-scm.com](https://git-scm.com) |
-
----
-
-## Step 1 — Clone and install
+Get up and running from the repository root in 3 commands:
 
 ```bash
-git clone <your-repo-url> CareerPulse
-cd CareerPulse
+# 1. Generate all environment files (.env) from templates
+npm run setup:env
+
+# 2. Start the Frontend dev server (or preview production build)
+npm run dev           # Dev server with HMR → http://localhost:5173
+npm run preview       # Production preview → http://localhost:5173
+
+# 3. In another terminal, start the Backend API
+npm run dev:backend   # API server → http://localhost:4000
 ```
 
 ---
 
-## Step 2 — Frontend
+## 📋 Prerequisites
 
-```bash
-# Install deps (uses pnpm from .mise.toml)
-pnpm install
+| Tool | Recommended Version | Purpose | Download |
+|---|---|---|---|
+| **Node.js** | ≥ 20.x | Frontend & Backend runtime | [nodejs.org](https://nodejs.org) |
+| **npm** | ≥ 10.x | Package manager | Bundled with Node.js |
+| **Python** | ≥ 3.10 | AI Engine FastAPI service | [python.org](https://python.org) |
+| **MongoDB** | ≥ 7.x *(Optional for dev)* | Database | [mongodb.com](https://mongodb.com/try/download/community) or Atlas |
 
-# Copy and fill env file
-cp .env.example .env
-
-# Start dev server (hot-reload, port 8443)
-pnpm dev
-```
-
-The app is available at **http://localhost:8443**.
+> [!NOTE]
+> **MongoDB is optional for frontend development and local preview.**
+> In development mode, the backend automatically detects if MongoDB is offline and continues running so that health checks and non-database routes remain fully functional.
 
 ---
 
-## Step 3 — Backend
+## 📁 Repository Setup by Service
+
+### 1. Root Monorepo Commands
+
+You can run and orchestrate the entire platform from the repository root:
+
+| Command | Action |
+|---|---|
+| `npm run setup:env` | Generates `.env` files for frontend, backend, and ai-engine |
+| `npm run dev` | Runs the Frontend Vite development server |
+| `npm run preview` | Serves the production build of Frontend |
+| `npm run dev:backend` | Runs the Backend Express server with auto-reload |
+| `npm run dev:all` | Runs both Backend and Frontend concurrently |
+| `npm run build` | Compiles both Frontend and Backend |
+| `npm run test` | Runs the backend unit and integration test suite |
+| `npm run db:seed` | Populates MongoDB with the sample skill taxonomy |
+| `npm run health` | Probes health status for Frontend, Backend, and AI Engine |
+
+---
+
+### 2. Frontend (React 19 · Vite · Tailwind CSS v4)
+
+```bash
+cd frontend
+
+# Install dependencies (already installed)
+npm install
+
+# Start development server
+npm run dev        # → http://localhost:5173
+
+# Or build & preview
+npm run build
+npm run preview    # → http://localhost:5173
+```
+
+**Environment Variables (`frontend/.env`):**
+```ini
+VITE_API_URL=http://localhost:4000/api/v1
+VITE_AI_ENGINE_URL=http://localhost:8000
+```
+
+---
+
+### 3. Backend (Node.js · Express · TypeScript · MongoDB)
 
 ```bash
 cd backend
 
-# Install deps
+# Install dependencies
 npm install
 
-# Configure environment
-cp .env.example .env
-# Edit .env and set:
-#   MONGODB_URI=mongodb://localhost:27017/careerpulse
-#   JWT_SECRET=<your-secret>
+# Start in development mode (hot reload via ts-node-dev)
+npm run dev        # → http://localhost:4000
 
-# Start dev server (hot-reload, port 4000)
-npm run dev
+# Run tests
+npm test
+
+# Build TypeScript to dist/
+npm run build
+
+# Run production build
+npm start
 ```
 
-Test the backend is running:
+**Verify Backend:**
 ```bash
 curl http://localhost:4000/health
-# → {"status":"ok","service":"careerpulse-backend","timestamp":"…"}
+# Response:
+# {"status":"ok","service":"careerpulse-backend","version":"1.0.0","uptime":1,"database":"disconnected"}
+```
+
+**Environment Variables (`backend/.env`):**
+```ini
+NODE_ENV=development
+BACKEND_PORT=4000
+MONGODB_URI=mongodb://localhost:27017/careerpulse
+JWT_SECRET=replace_with_a_long_random_secret
+JWT_EXPIRES_IN=7d
+AI_ENGINE_URL=http://localhost:8000
+FRONTEND_URL=http://localhost:5173
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX=500
 ```
 
 ---
 
-## Step 4 — AI Engine
+### 4. AI Engine (Python · FastAPI · scikit-learn · Pydantic)
+
+The AI Engine provides machine learning pipelines for resume parsing, skill matching, and gap analysis.
 
 ```bash
 cd ai-engine
 
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate    # Windows: .venv\Scripts\activate
+# 1. Create Python virtual environment
+python3 -m venv .venv
 
-# Install Python dependencies
+# 2. Activate virtual environment
+source .venv/bin/activate       # On Linux / macOS
+# .venv\Scripts\activate       # On Windows
+
+# 3. Install dependencies
 pip install -r requirements.txt
 
-# Configure environment
-cp .env.example .env
-
-# Start FastAPI dev server (port 8000)
+# 4. Start the FastAPI development server
 uvicorn app.main:app --reload --port 8000
 ```
 
-Test the AI engine:
-```bash
-curl http://localhost:8000/health
-# → {"status":"ok","service":"careerpulse-ai-engine","timestamp":"…"}
+**Interactive API Documentation:**
+- Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
+- ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+- Health Check: [http://localhost:8000/health](http://localhost:8000/health)
+
+**Environment Variables (`ai-engine/.env`):**
+```ini
+AI_ENGINE_PORT=8000
+LLM_API_KEY=replace_with_your_llm_api_key
+LLM_MODEL=gpt-4o-mini
+BACKEND_URL=http://localhost:4000/api/v1
+ENVIRONMENT=development
+LOG_LEVEL=info
 ```
 
 ---
 
-## Step 5 — Docker Compose (all services)
+### 5. Multi-Service Health Checker
+
+To verify which services are currently online, run:
 
 ```bash
-# From repo root
-cp .env.example .env
-cp backend/.env.example backend/.env
-cp ai-engine/.env.example ai-engine/.env
+npm run health
+# or: bash scripts/check-health.sh
+```
 
-# Build and start all containers
-docker compose up --build
+Sample output:
+```
+==================================================
+🩺 CareerPulse Service Health Checker
+==================================================
+Checking Backend (http://localhost:4000/health)... ✅ ONLINE
+{"status":"ok","service":"careerpulse-backend",...}
 
-# Tear down (preserves volumes)
-docker compose down
+Checking AI Engine (http://localhost:8000/health)... ❌ OFFLINE
+Checking Frontend (http://localhost:5173)... ✅ ONLINE
+==================================================
 ```
 
 ---
 
-## Environment Variables Reference
+## 🛠️ Troubleshooting
 
-### Frontend (`.env`)
-| Variable | Required | Description |
-|---|---|---|
-| `VITE_API_URL` | Yes | Backend API base URL |
-| `VITE_AI_ENGINE_URL` | No | Direct AI engine URL (optional) |
-
-### Backend (`backend/.env`)
-| Variable | Required | Description |
-|---|---|---|
-| `MONGODB_URI` | Yes | MongoDB connection string |
-| `JWT_SECRET` | Yes | Long random string for JWT signing |
-| `JWT_EXPIRES_IN` | No | Token TTL (default: `7d`) |
-| `BACKEND_PORT` | No | Port (default: `4000`) |
-| `AI_ENGINE_URL` | Yes | URL of AI engine service |
-| `FRONTEND_URL` | Yes | Allowed CORS origin |
-
-### AI Engine (`ai-engine/.env`)
-| Variable | Required | Description |
-|---|---|---|
-| `LLM_API_KEY` | Yes* | API key for the LLM provider |
-| `LLM_MODEL` | No | Model name (default: `gpt-4o-mini`) |
-| `AI_ENGINE_PORT` | No | Port (default: `8000`) |
-| `BACKEND_URL` | No | Backend URL for callbacks |
-
-*Required only when LLM-based features are enabled.
-
----
-
-## Troubleshooting
-
-**Port already in use:** Change the port in the relevant `.env` file.
-
-**MongoDB connection refused:** Ensure MongoDB is running locally or update `MONGODB_URI` to point to Atlas.
-
-**pnpm not found:** Run `npm i -g pnpm` or use `mise install` if you have mise configured.
+| Issue | Resolution |
+|---|---|
+| **Port 5173 or 4000 in use** | Kill existing process (`lsof -i :4000` → `kill -9 <PID>`) or change the port in `.env`. |
+| **MongoDB connection failed warning** | Normal in dev mode without local mongod. If using MongoDB Atlas, update `MONGODB_URI` in `backend/.env`. |
+| **Frontend preview cannot find dist** | Run `npm --prefix frontend run build` before `npm run preview`. |
+| **Python package installation issues** | Ensure you are inside the activated `.venv` and Python version is ≥ 3.10. |

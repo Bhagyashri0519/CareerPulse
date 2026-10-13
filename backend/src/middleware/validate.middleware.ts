@@ -1,18 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
+import { sendError } from '../utils/api-response';
 
 /**
  * validate — run after express-validator chain.
- * Returns 422 with error details if any validation rule failed.
+ * Returns 422 with formatted errors if any validation rule failed.
  */
 export function validate(req: Request, res: Response, next: NextFunction): void {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    res.status(422).json({
-      success: false,
-      message: 'Validation failed',
-      errors: errors.array(),
-    });
+    sendError(res, 'Validation failed', 422, errors.array());
     return;
   }
   next();

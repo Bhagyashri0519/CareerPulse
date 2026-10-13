@@ -1,14 +1,27 @@
 import { Router } from 'express';
+import { sendSuccess } from '../utils/api-response';
 
 /**
  * Root API router — mounts all module sub-routers under /api/v1.
- * Add new module routers here as the platform grows.
+ * Conforms to the standard API response format.
  */
 const apiRouter = Router();
 
-// Health endpoint (also available at root /health in app.ts)
+// API root info & status
 apiRouter.get('/', (_req, res) => {
-  res.json({ success: true, message: 'CareerPulse API v1', version: '1.0.0' });
+  sendSuccess(
+    res,
+    {
+      name: 'CareerPulse API',
+      version: '1.0.0',
+      status: 'operational',
+      endpoints: {
+        health: '/health',
+        apiRoot: '/api/v1',
+      },
+    },
+    'Welcome to CareerPulse API v1',
+  );
 });
 
 // ─── Module routes (uncomment as each module is implemented) ──────────────────

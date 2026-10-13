@@ -10,6 +10,7 @@ Start with:
   uvicorn app.main:app --reload --port 8000
 """
 
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,15 +39,29 @@ app = FastAPI(
 )
 
 # ─── CORS ─────────────────────────────────────────────────────────────────────
-import os
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("BACKEND_URL", "http://localhost:4000")],
+    allow_origins=[
+        os.getenv("BACKEND_URL", "http://localhost:4000"),
+        "http://localhost:5173",
+        "http://localhost:8443",
+        "http://localhost:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ─── Root Endpoint ────────────────────────────────────────────────────────────
+@app.get("/", tags=["Root"])
+async def root():
+    return {
+        "status": "ok",
+        "service": "careerpulse-ai-engine",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "health": "/health",
+    }
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(health_router, prefix="/health", tags=["Health"])
