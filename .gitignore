@@ -1,0 +1,177 @@
+# ==============================================================================
+# CareerPulse — Master .gitignore
+# ==============================================================================
+
+# ─── Preserve Directory Structure & Placeholders ─────────────────────────────
+!.gitkeep
+
+# ─── Environment Variables & Credentials ─────────────────────────────────────
+# Never commit actual secrets, API keys, or database credentials to GitHub
+.env
+.env.*
+.env*.local
+*.env
+*.env.local
+
+# Allow example / template environment files
+!.env.example
+!*.env.example
+!.env.*.example
+!.env.template
+!*.env.template
+
+# Private keys and certificates
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+
+# ─── Node.js / Frontend / Backend ────────────────────────────────────────────
+node_modules/
+jspm_packages/
+dist/
+build/
+out/
+.cache/
+.vite/
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+.turbo/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# ─── Python / AI Engine ──────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env*/
+venv*/
+
+# Python testing & linting caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ─── Machine Learning Artifacts & Datasets ───────────────────────────────────
+# Keep placeholder .gitkeep so empty directories remain in version control
+ai-engine/artifacts/*
+!ai-engine/artifacts/.gitkeep
+
+ai-engine/data/processed/*
+!ai-engine/data/processed/.gitkeep
+
+ai-engine/data/private/*
+!ai-engine/data/private/.gitkeep
+
+# Large serialized models, weights, and binary datasets
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.onnx
+*.safetensors
+*.bin
+*.ckpt
+*.model
+*.parquet
+*.feather
+
+# ─── Jupyter Notebooks ───────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# ─── User Uploads & Sensitive Student Data ───────────────────────────────────
+uploads/
+storage/uploads/
+storage/temp/
+temp/
+tmp/
+*.resume.pdf
+*private*
+
+# ─── Databases & Local Storage ───────────────────────────────────────────────
+mongo-data/
+postgres-data/
+data/db/
+dump/
+*.sqlite
+*.sqlite3
+*.db
+
+# ─── Docker ──────────────────────────────────────────────────────────────────
+.docker/
+docker-compose.override.yml
+docker-compose.local.yml
+
+# ─── Operating System Files ──────────────────────────────────────────────────
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+desktop.ini
+
+# Linux
+*~
+.directory
+
+# ─── IDE & Editor Configurations ─────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project

@@ -1,0 +1,53 @@
+version: '3.9'
+
+services:
+  # ─── Frontend (React + Vite) ─────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://backend:4000/api/v1
+      - VITE_AI_ENGINE_URL=http://ai-engine:8000
+    depends_on:
+      - backend
+
+  # ─── Backend (Node.js + Express) ─────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/careerpulse
+      - AI_ENGINE_URL=http://ai-engine:8000
+      - FRONTEND_URL=http://localhost:5173
+    depends_on:
+      - mongo
+      - ai-engine
+
+  # ─── AI Engine (Python + FastAPI) ─────────────────────────────────────────────
+  ai-engine:
+    build:
+      context: ./ai-engine
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./ai-engine/.env
+    environment:
+      - BACKEND_URL=http://backend:4000/api/v1
+
+  # ─── MongoDB ──────────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
