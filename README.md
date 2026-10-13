@@ -165,13 +165,17 @@ CareerPulse/
 
 ---
 
-## 📚 Documentation
+## 📚 Architectural & Technical Documentation
 
-| Document | Contents |
+| Document | Purpose |
 |---|---|
+| [DATABASE_DESIGN.md](./docs/DATABASE_DESIGN.md) | All 16 MongoDB entities, fields, embedded subdocuments, indexes & ERD |
+| [DOMAIN_MODEL.md](./docs/DOMAIN_MODEL.md) | Canonical skill system, 0-100 proficiency scale, readiness formula & state machines |
+| [API_DOCUMENTATION.md](./docs/API_DOCUMENTATION.md) | Comprehensive versioned REST API contract specification (`/api/v1`) |
+| [AI_SERVICE_CONTRACT.md](./docs/AI_SERVICE_CONTRACT.md) | Backend-to-AI Engine internal contracts, request/response schemas & fallbacks |
+| [SKILL_TAXONOMY.md](./docs/SKILL_TAXONOMY.md) | Canonical skill catalog, evaluation rubrics, and career role benchmarks |
+| [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Service topologies, boundary responsibilities & communication flows |
+| [FOLDER_STRUCTURE.md](./docs/FOLDER_STRUCTURE.md) | Complete directory and module ownership cheat-sheet |
 | [ENVIRONMENT_SETUP.md](./docs/ENVIRONMENT_SETUP.md) | Step-by-step local setup guide |
-| [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System design & service communication |
-| [FOLDER_STRUCTURE.md](./docs/FOLDER_STRUCTURE.md) | Complete directory and module reference |
-| [DATABASE_DESIGN.md](./docs/DATABASE_DESIGN.md) | MongoDB schemas, indexes & retention |
 | [DEVELOPMENT_GUIDE.md](./docs/DEVELOPMENT_GUIDE.md) | Coding conventions, responses & testing |
 | [CONTRIBUTING.md](./docs/CONTRIBUTING.md) | Branching, commits & PR process |

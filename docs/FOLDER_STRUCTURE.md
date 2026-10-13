@@ -148,8 +148,12 @@ CareerPulse/
 │
 ├── docs/
 │   ├── ARCHITECTURE.md              System design, service communication
+│   ├── DOMAIN_MODEL.md              Shared domain rules, canonical IDs, state machines
+│   ├── DATABASE_DESIGN.md           All 16 MongoDB entities, fields, indexes, ERD
+│   ├── API_DOCUMENTATION.md         Complete REST API contracts (/api/v1)
+│   ├── AI_SERVICE_CONTRACT.md       Backend-to-AI Engine internal contracts & schemas
+│   ├── SKILL_TAXONOMY.md            Canonical skills registry, rubrics & role benchmarks
 │   ├── CONTRIBUTING.md              Branching, commits, PR process
-│   ├── DATABASE_DESIGN.md           Entities, fields, indexes, data retention
 │   ├── DEVELOPMENT_GUIDE.md         Code conventions, patterns, lint/test commands
 │   ├── ENVIRONMENT_SETUP.md         Step-by-step local setup guide
 │   └── FOLDER_STRUCTURE.md          This file
