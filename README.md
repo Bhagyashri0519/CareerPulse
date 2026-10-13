@@ -4,46 +4,50 @@
 
 ---
 
-## ⚡ Quick Start (Monorepo Commands)
+## ⚡ Quick Start
 
-All primary tasks can be executed directly from the repository root:
+All primary commands can be executed directly from the repository root:
 
 ```bash
 # 1. Generate local .env files across all services
 npm run setup:env
 
-# 2. Preview the built frontend immediately
-npm run preview
-# → http://localhost:5173
-
-# 3. Or launch frontend in development mode with hot reload
+# 2. Start the Frontend dev server with HMR
 npm run dev
 # → http://localhost:5173
 
-# 4. In another terminal, start the backend API
+# 3. Or preview the production build immediately
+npm run preview
+# → http://localhost:5173
+
+# 4. In another terminal, start the Backend API
 npm run dev:backend
 # → http://localhost:4000
 ```
 
-### Monorepo Scripts Reference
+### Root Scripts Reference
 
 | Command | Action |
 |---|---|
-| `npm run setup:env` | Generates `.env` files for frontend, backend, and ai-engine |
+| `npm run setup:env` | Generates `.env` files from templates across all services |
 | `npm run dev` | Runs Frontend Vite dev server (`http://localhost:5173`) |
 | `npm run preview` | Previews Frontend production build (`http://localhost:5173`) |
-| `npm run dev:backend` | Runs Backend Express server with auto-reload (`http://localhost:4000`) |
-| `npm run dev:all` | Runs both Frontend and Backend concurrently |
 | `npm run build` | Builds both Frontend and Backend for production |
-| `npm run test` | Runs Jest unit and integration tests |
+| `npm run build:frontend` | Builds Frontend production assets into `frontend/dist/` |
+| `npm run build:backend` | Builds Backend TypeScript into `backend/dist/` |
+| `npm run typecheck` | Typechecks Frontend and Backend |
+| `npm run dev:backend` | Runs Backend Express server with auto-reload (`http://localhost:4000`) |
+| `npm run test` / `test:backend` | Runs Backend Jest test suites |
+| `npm run dev:all` | Runs Frontend and Backend concurrently |
 | `npm run db:seed` | Seeds database with skill taxonomy |
-| `npm run health` | Runs automated health check against all services |
+| `npm run health` | Runs automated health check across all services |
 
 ---
 
 ## 🚀 Running Individual Services
 
 ### 1. Frontend (React 19 · Vite · Tailwind CSS v4)
+Located in `frontend/`.
 
 ```bash
 cd frontend
@@ -53,6 +57,7 @@ npm run preview  # Serve production build → http://localhost:5173
 ```
 
 ### 2. Backend (Node.js · Express · TypeScript · MongoDB)
+Located in `backend/`.
 
 ```bash
 cd backend
@@ -64,6 +69,7 @@ npm test         # Run test suite
 > **Note on MongoDB:** In local development, the backend will gracefully start even if MongoDB is not running locally, reporting `database: "disconnected"` in `/health` while keeping all non-database routes active.
 
 ### 3. AI Engine (Python · FastAPI · scikit-learn · Pydantic)
+Located in `ai-engine/`.
 
 ```bash
 cd ai-engine
@@ -110,7 +116,7 @@ All CareerPulse endpoints follow a strict, predictable JSON shape:
     "status": "ok",
     "service": "careerpulse-backend",
     "version": "1.0.0",
-    "timestamp": "2026-10-13T18:20:00.000Z",
+    "timestamp": "2026-10-14T00:00:00.000Z",
     "uptime": 42,
     "environment": "development",
     "database": "connected"
@@ -122,7 +128,7 @@ All CareerPulse endpoints follow a strict, predictable JSON shape:
     "status": "ok",
     "service": "careerpulse-ai-engine",
     "version": "1.0.0",
-    "timestamp": "2026-10-13T18:20:00.000Z"
+    "timestamp": "2026-10-14T00:00:00.000Z"
   }
   ```
 
@@ -132,19 +138,26 @@ All CareerPulse endpoints follow a strict, predictable JSON shape:
 
 ```
 CareerPulse/
-├── package.json           Root script runner (preview, dev, build, health)
+├── package.json           Root script orchestrator (preview, dev, build, health)
 ├── frontend/              React 19 + Vite + Tailwind CSS v4 SPA
 │   ├── src/               Pages, features, components, services
+│   ├── public/            Static assets
+│   ├── index.html         Vite entry point
+│   ├── vite.config.ts     Vite configuration
+│   ├── tsconfig.json      TypeScript configuration
 │   └── package.json
 ├── backend/               Express + TypeScript + MongoDB API
 │   ├── src/               Config, middleware, routes, modules, utils
 │   ├── tests/             Jest test suites
+│   ├── tsconfig.json      Backend TypeScript configuration
+│   ├── jest.config.js     Jest configuration
 │   └── package.json
 ├── ai-engine/             Python + FastAPI ML service
 │   ├── app/               API routes, ML services, schemas, models
 │   ├── tests/             Pytest test suite
 │   └── requirements.txt
 ├── database/              DB guidelines, migration scripts & seed data
+├── tests/                 Cross-module integration smoke tests
 ├── docs/                  System architecture & developer guides
 ├── scripts/               Dev helpers (setup-env.sh, check-health.sh, run-dev.sh)
 └── docker-compose.yml     Docker multi-container orchestration
@@ -162,5 +175,3 @@ CareerPulse/
 | [DATABASE_DESIGN.md](./docs/DATABASE_DESIGN.md) | MongoDB schemas, indexes & retention |
 | [DEVELOPMENT_GUIDE.md](./docs/DEVELOPMENT_GUIDE.md) | Coding conventions, responses & testing |
 | [CONTRIBUTING.md](./docs/CONTRIBUTING.md) | Branching, commits & PR process |
-
----

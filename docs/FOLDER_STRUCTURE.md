@@ -14,6 +14,7 @@ CareerPulse/
 │   ├── vite.config.ts               Vite + React + Tailwind CSS v4 config
 │   ├── tsconfig.json                TypeScript config
 │   ├── package.json                 Frontend deps & scripts
+│   ├── package-lock.json            Locked frontend dependencies
 │   ├── .env.example                 Frontend environment variable template
 │   ├── README.md
 │   ├── public/                      Static assets (favicon, OG images…)
@@ -58,14 +59,14 @@ CareerPulse/
 ├── backend/
 │   ├── .env.example                 Environment variable template
 │   ├── package.json                 Express, Mongoose, JWT, Helmet, ts-node-dev
-│   ├── tsconfig.json
+│   ├── tsconfig.json                Backend TypeScript configuration
 │   ├── jest.config.js               ts-jest test configuration
 │   ├── README.md
 │   └── src/
 │       ├── app.ts                   Express app — CORS, Helmet, rate-limit, errors
 │       ├── server.ts                Entry point — graceful server boot & shutdown
 │       ├── config/
-│       │   └── db.ts                Mongoose connection manager & resilient fallback
+│       │   └── db.ts                Mongoose connection manager & resilient dev mode
 │       ├── modules/                 Feature modules — one per domain
 │       │   ├── auth/                Register, login, token refresh
 │       │   ├── users/               User CRUD
@@ -131,7 +132,7 @@ CareerPulse/
 │
 │
 │  ┌─────────────────────────────────────────────────────────────────────┐
-│  │  SUPPORT  (database · docs · scripts · CI)                         │
+│  │  SUPPORT  (database · docs · scripts · tests · CI)                  │
 │  └─────────────────────────────────────────────────────────────────────┘
 │
 ├── database/
@@ -141,6 +142,9 @@ CareerPulse/
 │   │   └── skills.seed.ts           Sample skill taxonomy (safe sample data only)
 │   └── scripts/
 │       └── seed.ts                  MongoDB automated seed runner
+│
+├── tests/
+│   └── README.md                    Cross-module integration testing guide
 │
 ├── docs/
 │   ├── ARCHITECTURE.md              System design, service communication
@@ -170,15 +174,14 @@ CareerPulse/
 
 ---
 
-## Module Addition Cheat-Sheet
+## Directory Ownership & Responsibilities
 
-| Adding a... | Location |
-|---|---|
-| New UI page | `frontend/src/features/<name>/pages/` → route in `frontend/src/App.tsx` |
-| Shared React component | `frontend/src/components/ui/` or `common/` |
-| Custom hook | `frontend/src/hooks/use-<name>.ts` |
-| Backend API module | `backend/src/modules/<name>/` → register in `backend/src/routes/index.ts` |
-| AI endpoint | `ai-engine/app/api/<name>.py` → register in `ai-engine/app/main.py` |
-| Database seed | `database/seeds/<name>.seed.ts` |
-| Documentation | `docs/<NAME>.md` |
-| Automation script | `scripts/<name>.sh` |
+| Directory | Layer | Owner / Purpose | Primary Stack |
+|---|---|---|---|
+| `frontend/` | Frontend | UI components, state, pages, and client services | React 19, TypeScript, Tailwind CSS v4, Vite |
+| `backend/` | Backend | Core REST API, business logic, authentication, DB models | Express, TypeScript, MongoDB, Mongoose, Jest |
+| `ai-engine/`| AI / ML | Skill extraction, scoring, gap analysis, roadmaps | Python 3.10+, FastAPI, scikit-learn |
+| `database/` | Data | Schemas, seeds, migration scripts | Mongoose, MongoDB |
+| `docs/` | Architecture | System specs, API contracts, guides | Markdown |
+| `scripts/` | Tooling | Developer experience and automation | Bash |
+| `tests/` | QA | Cross-module and integration smoke tests | TypeScript / Bash |

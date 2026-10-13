@@ -1,11 +1,9 @@
 {
-  "name": "careerpulse-monorepo",
+  "name": "careerpulse",
   "version": "1.0.0",
   "private": true,
   "description": "CareerPulse — AI-Powered Career Development Platform",
   "scripts": {
-    "setup:env": "bash scripts/setup-env.sh",
-    "install:all": "npm --prefix frontend install && npm --prefix backend install",
     "dev": "npm --prefix frontend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
     "dev:backend": "npm --prefix backend run dev",
@@ -18,10 +16,10 @@
     "typecheck": "npm --prefix frontend run typecheck && npm --prefix backend run typecheck",
     "typecheck:frontend": "npm --prefix frontend run typecheck",
     "typecheck:backend": "npm --prefix backend run typecheck",
-    "lint": "npm --prefix frontend run lint && npm --prefix backend run lint",
     "test": "npm --prefix backend run test",
     "test:backend": "npm --prefix backend run test",
     "db:seed": "cd backend && NODE_PATH=./node_modules npx ts-node --project tsconfig.json --transpile-only ../database/scripts/seed.ts",
+    "setup:env": "bash scripts/setup-env.sh",
     "health": "bash scripts/check-health.sh"
   },
   "keywords": [

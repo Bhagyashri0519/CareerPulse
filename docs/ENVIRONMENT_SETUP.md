@@ -41,23 +41,26 @@ npm run dev:backend   # API server → http://localhost:4000
 
 ### 1. Root Monorepo Commands
 
-You can run and orchestrate the entire platform from the repository root:
+All services can be orchestrated directly from the repository root:
 
 | Command | Action |
 |---|---|
 | `npm run setup:env` | Generates `.env` files for frontend, backend, and ai-engine |
-| `npm run dev` | Runs the Frontend Vite development server |
-| `npm run preview` | Serves the production build of Frontend |
-| `npm run dev:backend` | Runs the Backend Express server with auto-reload |
+| `npm run dev` | Runs the Frontend Vite development server (`http://localhost:5173`) |
+| `npm run preview` | Serves the production build of Frontend (`http://localhost:5173`) |
+| `npm run build` | Compiles both Frontend and Backend for production |
+| `npm run build:frontend` | Compiles Frontend (`frontend/dist/`) |
+| `npm run typecheck` | Runs TypeScript checks across Frontend and Backend |
+| `npm run dev:backend` | Runs the Backend Express server with auto-reload (`http://localhost:4000`) |
+| `npm run build:backend` | Builds backend TypeScript to `backend/dist/` |
+| `npm run test` / `npm run test:backend` | Runs backend unit and integration test suite |
 | `npm run dev:all` | Runs both Backend and Frontend concurrently |
-| `npm run build` | Compiles both Frontend and Backend |
-| `npm run test` | Runs the backend unit and integration test suite |
 | `npm run db:seed` | Populates MongoDB with the sample skill taxonomy |
 | `npm run health` | Probes health status for Frontend, Backend, and AI Engine |
 
 ---
 
-### 2. Frontend (React 19 · Vite · Tailwind CSS v4)
+### 2. Frontend (`frontend/` · React 19 · Vite · Tailwind CSS v4)
 
 ```bash
 cd frontend
@@ -81,7 +84,7 @@ VITE_AI_ENGINE_URL=http://localhost:8000
 
 ---
 
-### 3. Backend (Node.js · Express · TypeScript · MongoDB)
+### 3. Backend (`backend/` · Node.js · Express · TypeScript · MongoDB)
 
 ```bash
 cd backend
@@ -124,7 +127,7 @@ RATE_LIMIT_MAX=500
 
 ---
 
-### 4. AI Engine (Python · FastAPI · scikit-learn · Pydantic)
+### 4. AI Engine (`ai-engine/` · Python · FastAPI · scikit-learn · Pydantic)
 
 The AI Engine provides machine learning pipelines for resume parsing, skill matching, and gap analysis.
 
@@ -169,19 +172,6 @@ To verify which services are currently online, run:
 ```bash
 npm run health
 # or: bash scripts/check-health.sh
-```
-
-Sample output:
-```
-==================================================
-🩺 CareerPulse Service Health Checker
-==================================================
-Checking Backend (http://localhost:4000/health)... ✅ ONLINE
-{"status":"ok","service":"careerpulse-backend",...}
-
-Checking AI Engine (http://localhost:8000/health)... ❌ OFFLINE
-Checking Frontend (http://localhost:5173)... ✅ ONLINE
-==================================================
 ```
 
 ---
