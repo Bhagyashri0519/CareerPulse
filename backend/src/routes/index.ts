@@ -24,22 +24,16 @@ apiRouter.get('/', (_req, res) => {
   );
 });
 
-// ─── Module routes (uncomment as each module is implemented) ──────────────────
-// import authRouter from '../modules/auth/auth.routes';
-// import usersRouter from '../modules/users/users.routes';
-// import profilesRouter from '../modules/profiles/profiles.routes';
-// import resumesRouter from '../modules/resumes/resumes.routes';
-// import skillsRouter from '../modules/skills/skills.routes';
-// import assessmentsRouter from '../modules/assessments/assessments.routes';
-// import skillGapRouter from '../modules/skill-gap/skill-gap.routes';
-// import roadmapsRouter from '../modules/roadmaps/roadmaps.routes';
-// import resourcesRouter from '../modules/resources/resources.routes';
-// import careerMatchingRouter from '../modules/career-matching/career-matching.routes';
+// ─── Module routes ─────────────────────────────────────────────────────────────
+import authRouter from '../modules/auth/auth.routes';
+import profilesRouter from '../modules/profiles/profiles.routes';
+import resumesRouter from '../modules/resumes/resumes.routes';
+import aiRouter from '../modules/ai/ai.routes';
 
-// apiRouter.use('/auth', authRouter);
-// apiRouter.use('/users', usersRouter);
-// apiRouter.use('/profiles', profilesRouter);
-// apiRouter.use('/resumes', resumesRouter);
+apiRouter.use('/auth', authRouter);
+apiRouter.use('/profiles', profilesRouter);
+apiRouter.use('/resumes', resumesRouter);
+apiRouter.use('/ai', aiRouter);
 // apiRouter.use('/skills', skillsRouter);
 // apiRouter.use('/assessments', assessmentsRouter);
 // apiRouter.use('/skill-gap', skillGapRouter);

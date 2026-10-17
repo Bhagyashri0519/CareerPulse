@@ -1,3 +1,4 @@
+import dns from 'dns';
 import mongoose from 'mongoose';
 
 type DbState = 'connected' | 'connecting' | 'disconnected';
@@ -8,6 +9,31 @@ export function getDbState(): DbState {
   if (mongoose.connection.readyState === 1) return 'connected';
   if (mongoose.connection.readyState === 2) return 'connecting';
   return 'disconnected';
+}
+
+/**
+ * Configure process-level DNS servers if DNS_SERVERS is explicitly defined.
+ */
+function applyCustomDns(): void {
+  const rawDns = process.env.DNS_SERVERS;
+  if (rawDns === undefined) return;
+
+  const servers = rawDns
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  if (servers.length === 0) {
+    throw new Error('DNS_SERVERS is set but contains no valid server addresses.');
+  }
+
+  try {
+    dns.setServers(servers);
+    console.log(`[DB] Configured custom DNS servers: ${servers.join(', ')}`);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`Invalid DNS_SERVERS configuration: ${message}`);
+  }
 }
 
 /**
@@ -23,9 +49,11 @@ export async function connectDb(uri?: string): Promise<boolean> {
   }
 
   try {
+    applyCustomDns();
+
     connectionState = 'connecting';
     await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 2000,
+      serverSelectionTimeoutMS: 5000,
     });
     connectionState = 'connected';
     console.log('[DB] MongoDB connected successfully');

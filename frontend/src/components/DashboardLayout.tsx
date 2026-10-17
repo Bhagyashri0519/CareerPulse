@@ -55,8 +55,12 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-violet-600 rounded-full"></span>
             </button>
 
-            <Link to="/dashboard" className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-              K
+            <Link
+              to="/profile"
+              title="My Profile"
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-sm hover:ring-2 hover:ring-violet-300 transition-all"
+            >
+              {useApp().user?.name?.charAt(0).toUpperCase() || useApp().user?.email?.charAt(0).toUpperCase() || 'S'}
             </Link>
           </div>
         </header>

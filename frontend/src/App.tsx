@@ -16,6 +16,8 @@ import LearningRoadmap from './pages/LearningRoadmap';
 import LearningProgress from './pages/LearningProgress';
 import Analytics from './pages/Analytics';
 import Opportunities from './pages/Opportunities';
+import Profile from './pages/Profile';
+import ResumeAnalysis from './pages/ResumeAnalysis';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isLoggedIn } = useApp();
@@ -31,6 +33,8 @@ function AppRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <Login />} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/resume" element={<ProtectedRoute><ResumeAnalysis /></ProtectedRoute>} />
         <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
         <Route path="/assessment/result" element={<ProtectedRoute><AssessmentResult /></ProtectedRoute>} />
         <Route path="/skills" element={<ProtectedRoute><SkillProfile /></ProtectedRoute>} />

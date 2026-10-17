@@ -17,13 +17,17 @@ export default function PublicNavbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-md">
-            <span className="text-white text-xs font-bold font-[Outfit]">CP</span>
-          </div>
-          <span className="text-gray-900 font-bold text-lg" style={{ fontFamily: 'Outfit, sans-serif' }}>
-            CareerPulse
-          </span>
+        <Link to="/" className="flex items-center group py-1" aria-label="CareerPulse — Discover, Plan, Skill, Grow">
+          <img
+            src="/assets/careerpulse-logo.png"
+            alt="CareerPulse — Discover, Plan, Skill, Grow"
+            className="h-10 sm:h-11 w-auto max-w-[200px] object-contain hidden min-[360px]:block transition-opacity duration-150 group-hover:opacity-90"
+          />
+          <img
+            src="/assets/careerpulse-icon.png"
+            alt="CareerPulse — Discover, Plan, Skill, Grow"
+            className="h-9 w-auto object-contain block min-[360px]:hidden transition-opacity duration-150 group-hover:opacity-90"
+          />
         </Link>
 
         <div className="hidden lg:flex items-center gap-1">

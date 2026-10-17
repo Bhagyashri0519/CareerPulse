@@ -1,34 +1,167 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { api } from '../services/api';
+import { User, StudentProfile } from '../types';
+
+interface AuthResponseData {
+  user: User;
+  token: string;
+  refreshToken?: string;
+}
 
 export default function Login() {
-  const { login } = useApp();
+  const { loginWithAuth, login } = useApp();
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
 
-  function handleLogin(e: React.FormEvent) {
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    if (error) setError('');
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    if (error) setError('');
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+    if (error) setError('');
+  };
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
     setError('');
-    if (username === 'Kushi' && password === '1525') {
-      setLoading(true);
-      setTimeout(() => {
-        login();
-        navigate('/dashboard');
-      }, 1000);
-    } else {
-      setError('Invalid credentials. Use Demo credentials below.');
+    setLoading(true);
+
+    try {
+      if (mode === 'login') {
+        const res = await api.post<{ success: boolean; data: AuthResponseData }>('/auth/login', {
+          email: email.trim(),
+          password,
+        });
+
+        if (res && res.data?.token) {
+          let profile: StudentProfile | null = null;
+          try {
+            const profileRes = await api.get<{ success: boolean; data: StudentProfile }>('/profiles/me');
+            profile = profileRes.data;
+          } catch {
+            // Profile optional on first login
+          }
+
+          loginWithAuth(res.data.token, res.data.user, profile);
+          navigate('/dashboard');
+          return;
+        }
+      } else {
+        const res = await api.post<{ success: boolean; data: AuthResponseData }>('/auth/register', {
+          email: email.trim(),
+          password,
+          name: name.trim(),
+          role: 'student',
+        });
+
+        if (res && res.data?.token) {
+          loginWithAuth(res.data.token, res.data.user);
+          navigate('/dashboard');
+          return;
+        }
+      }
+    } catch (err: unknown) {
+      let displayMsg = 'Invalid email or password.';
+      const isNetError =
+        (err as { isNetworkError?: boolean })?.isNetworkError ||
+        (err instanceof Error &&
+          (err.message.toLowerCase().includes('unable to connect') ||
+            err.message.toLowerCase().includes('failed to fetch') ||
+            err.message.toLowerCase().includes('network')));
+
+      if (isNetError) {
+        displayMsg = 'Unable to connect. Please try again.';
+      } else if (err instanceof Error && err.message) {
+        const lower = err.message.toLowerCase();
+        if (
+          lower.includes('invalid email') ||
+          lower.includes('invalid password') ||
+          lower.includes('unauthorized') ||
+          (err as { status?: number }).status === 401
+        ) {
+          displayMsg = 'Invalid email or password.';
+        } else {
+          displayMsg = err.message;
+        }
+      }
+      setError(displayMsg);
+    } finally {
+      setLoading(false);
     }
   }
 
-  function fillDemo() {
-    setUsername('Kushi');
-    setPassword('1525');
+  async function handleDemoLogin() {
+    if (loading) return;
     setError('');
+    setLoading(true);
+    const demoEmail = 'kushi@careerpulse.ai';
+    const demoPassword = 'Password123!';
+    const demoName = 'Kushi';
+
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    setName(demoName);
+
+    try {
+      // Try login first
+      const loginRes = await api.post<{ success: boolean; data: AuthResponseData }>('/auth/login', {
+        email: demoEmail,
+        password: demoPassword,
+      });
+
+      if (loginRes?.data?.token) {
+        let profile: StudentProfile | null = null;
+        try {
+          const profileRes = await api.get<{ success: boolean; data: StudentProfile }>('/profiles/me');
+          profile = profileRes.data;
+        } catch {
+          // Profile fetch fallback
+        }
+        loginWithAuth(loginRes.data.token, loginRes.data.user, profile);
+        navigate('/dashboard');
+        return;
+      }
+    } catch {
+      // If user does not exist in backend DB yet, register demo user
+      try {
+        const regRes = await api.post<{ success: boolean; data: AuthResponseData }>('/auth/register', {
+          email: demoEmail,
+          password: demoPassword,
+          name: demoName,
+          role: 'student',
+        });
+
+        if (regRes?.data?.token) {
+          loginWithAuth(regRes.data.token, regRes.data.user);
+          navigate('/dashboard');
+          return;
+        }
+      } catch {
+        // Dev offline fallback
+        login();
+        navigate('/dashboard');
+        return;
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -59,7 +192,7 @@ export default function Login() {
               { icon: '🎯', text: 'Personalized skill gap analysis' },
               { icon: '🗺️', text: 'Custom learning roadmap built for you' },
               { icon: '📈', text: 'Real-time career readiness tracking' },
-            ].map(item => (
+            ].map((item) => (
               <div key={item.text} className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-sm">{item.icon}</div>
                 <span className="text-white/90 text-sm">{item.text}</span>
@@ -71,43 +204,95 @@ export default function Login() {
         <p className="relative text-violet-300 text-sm">Smart India Hackathon 2026 · AI Career Platform</p>
       </div>
 
-      {/* Right login panel */}
+      {/* Right form panel */}
       <div className="flex-1 flex items-center justify-center p-6 bg-gray-50">
         <div className="w-full max-w-md">
-          <Link to="/" className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
-              <span className="text-white text-xs font-bold">CP</span>
-            </div>
-            <span className="text-gray-900 font-bold text-lg" style={{ fontFamily: 'Outfit' }}>CareerPulse</span>
+          <Link to="/" className="lg:hidden flex items-center mb-8" aria-label="CareerPulse — Discover, Plan, Skill, Grow">
+            <img
+              src="/assets/careerpulse-logo.png"
+              alt="CareerPulse — Discover, Plan, Skill, Grow"
+              className="h-9 w-auto max-w-[180px] object-contain"
+            />
           </Link>
 
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-1" style={{ fontFamily: 'Outfit' }}>Welcome Back 👋</h1>
-            <p className="text-gray-500 text-sm mb-6">Sign in to continue your career journey</p>
+            {/* Mode switch tabs */}
+            <div className="flex rounded-xl bg-gray-100 p-1 mb-6">
+              <button
+                type="button"
+                onClick={() => { setMode('login'); setError(''); }}
+                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
+                  mode === 'login'
+                    ? 'bg-white text-gray-900 shadow-xs'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+                style={{ fontFamily: 'Outfit, sans-serif' }}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => { setMode('register'); setError(''); }}
+                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
+                  mode === 'register'
+                    ? 'bg-white text-gray-900 shadow-xs'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+                style={{ fontFamily: 'Outfit, sans-serif' }}
+              >
+                Create Account
+              </button>
+            </div>
 
-            {/* Demo credentials badge */}
+            <h1 className="text-2xl font-bold text-gray-900 mb-1" style={{ fontFamily: 'Outfit' }}>
+              {mode === 'login' ? 'Welcome Back 👋' : 'Start Your Journey 🚀'}
+            </h1>
+            <p className="text-gray-500 text-sm mb-6">
+              {mode === 'login'
+                ? 'Sign in to continue your career journey'
+                : 'Create your account to unlock personalized career paths'}
+            </p>
+
+            {/* Quick Demo Access button */}
             <button
-              onClick={fillDemo}
+              type="button"
+              onClick={handleDemoLogin}
+              disabled={loading}
               className="w-full flex items-center justify-between bg-violet-50 border border-violet-200 rounded-xl p-3.5 mb-5 hover:bg-violet-100 transition-colors group"
             >
               <div className="flex items-center gap-2.5">
                 <span className="text-lg">🎯</span>
                 <div className="text-left">
-                  <p className="text-violet-700 font-semibold text-sm">Demo Login</p>
-                  <p className="text-violet-500 text-xs">Username: Kushi · Password: 1525</p>
+                  <p className="text-violet-700 font-semibold text-sm">One-Click Demo Login</p>
+                  <p className="text-violet-500 text-xs">Student: Kushi · Auto-connects to API</p>
                 </div>
               </div>
-              <span className="text-violet-500 text-xs font-medium group-hover:text-violet-700">Click to fill →</span>
+              <span className="text-violet-500 text-xs font-medium group-hover:text-violet-700">Click to enter →</span>
             </button>
 
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {mode === 'register' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={handleNameChange}
+                    placeholder="e.g. Arjun Ghuge"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100 transition-all text-sm"
+                  />
+                </div>
+              )}
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
                 <input
-                  type="text"
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
-                  placeholder="Enter your username"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={handleEmailChange}
+                  placeholder="name@university.edu"
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100 transition-all text-sm"
                 />
               </div>
@@ -117,29 +302,29 @@ export default function Login() {
                 <div className="relative">
                   <input
                     type={showPass ? 'text' : 'password'}
+                    required
                     value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="Enter your password"
+                    onChange={handlePasswordChange}
+                    placeholder={mode === 'register' ? 'Min 8 chars, 1 uppercase, 1 number, 1 symbol' : 'Enter your password'}
                     className="w-full border border-gray-200 rounded-xl px-4 py-3 pr-12 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100 transition-all text-sm"
                   />
-                  <button type="button" onClick={() => setShowPass(!showPass)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm">
+                  <button
+                    type="button"
+                    onClick={() => setShowPass(!showPass)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm"
+                  >
                     {showPass ? '🙈' : '👁️'}
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="rounded border-gray-300 text-violet-600" />
-                  <span className="text-sm text-gray-600">Remember me</span>
-                </label>
-                <button type="button" className="text-sm text-violet-600 hover:text-violet-700 font-medium">Forgot Password?</button>
-              </div>
-
               {error && (
-                <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3 text-red-700 text-sm">
-                  <span>⚠️</span> {error}
+                <div
+                  role="alert"
+                  className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3 text-red-700 text-sm"
+                >
+                  <span aria-hidden="true">⚠️</span>
+                  <span>{error}</span>
                 </div>
               )}
 
@@ -155,32 +340,40 @@ export default function Login() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    Signing in...
+                    Processing...
                   </span>
-                ) : 'Login →'}
+                ) : mode === 'login' ? (
+                  'Sign In →'
+                ) : (
+                  'Create Account →'
+                )}
               </button>
             </form>
 
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-xs text-gray-400 bg-white px-3">or continue with</div>
-            </div>
-
-            <button className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl py-3 text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all">
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-              </svg>
-              Continue with Google
-            </button>
-
             <p className="text-center text-sm text-gray-500 mt-5">
-              New to CareerPulse?{' '}
-              <Link to="/" className="text-violet-600 font-semibold hover:text-violet-700">Create account</Link>
+              {mode === 'login' ? (
+                <>
+                  New to CareerPulse?{' '}
+                  <button
+                    type="button"
+                    onClick={() => { setMode('register'); setError(''); }}
+                    className="text-violet-600 font-semibold hover:text-violet-700"
+                  >
+                    Create account
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => { setMode('login'); setError(''); }}
+                    className="text-violet-600 font-semibold hover:text-violet-700"
+                  >
+                    Sign in
+                  </button>
+                </>
+              )}
             </p>
           </div>
         </div>
