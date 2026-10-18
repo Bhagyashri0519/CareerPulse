@@ -165,6 +165,78 @@ export default function AIAssistant({ open, onToggle }: Props) {
     }
   };
 
+  const ALLOWED_NAV_PATHS = [
+    '/',
+    '/login',
+    '/dashboard',
+    '/profile',
+    '/resume',
+    '/assessment',
+    '/assessment/result',
+    '/skills',
+    '/learning-gap',
+    '/career-fit',
+    '/courses',
+    '/roadmap',
+    '/progress',
+    '/analytics',
+    '/opportunities',
+  ];
+
+  const handleRetry = async () => {
+    if (!lastFailedQuery || typing) return;
+    const query = lastFailedQuery;
+    setLastFailedQuery(null);
+    // Remove the error message from messages list to avoid clutter
+    setMessages((prev) => prev.filter((m) => !m.isError));
+    setTyping(true);
+
+    try {
+      const historyPayload = messages
+        .filter((m) => !m.isError)
+        .slice(-8)
+        .map((m) => ({
+          role: m.role === 'user' ? 'user' : 'assistant',
+          content: m.text,
+        }));
+
+      const res = await api.post<{ success: boolean; data: AIResponsePayload }>('/ai/chat', {
+        message: query,
+        history: historyPayload,
+        currentPage: location.pathname,
+      });
+
+      if (res?.data?.reply) {
+        setMessages((m) => [
+          ...m,
+          {
+            role: 'ai',
+            text: res.data.reply,
+            actions: res.data.actions || [],
+          },
+        ]);
+
+        if (res.data.suggestions?.length) {
+          setSuggestions(res.data.suggestions);
+        }
+      } else {
+        throw new Error('Empty response from AI service');
+      }
+    } catch {
+      setLastFailedQuery(query);
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'ai',
+          text: '⚠️ Unable to connect to CareerPulse AI right now. Please check your connection and click Retry below.',
+          isError: true,
+        },
+      ]);
+    } finally {
+      setTyping(false);
+    }
+  };
+
   const handleNewConversation = () => {
     setMessages([{ role: 'ai', text: getInitialGreeting() }]);
     setInput('');
@@ -172,10 +244,12 @@ export default function AIAssistant({ open, onToggle }: Props) {
   };
 
   const handleActionClick = (path: string) => {
-    navigate(path);
+    if (typeof path === 'string' && path.startsWith('/') && ALLOWED_NAV_PATHS.includes(path)) {
+      navigate(path);
+    }
   };
 
-  // Safe renderer for assistant text with support for bold, headers, bullet points, and internal links
+  // Safe renderer for assistant text with support for bold, italics, headers, bullet points, and internal links
   const renderFormattedText = (rawText: string) => {
     const lines = rawText.split('\n');
 
@@ -227,10 +301,10 @@ export default function AIAssistant({ open, onToggle }: Props) {
     );
   };
 
-  // Helper for inline bolding and Markdown links: [Label](/route)
+  // Helper for inline bolding, italics, and Markdown links: [Label](/route)
   const renderInlineStyles = (text: string) => {
-    // Regex matches [Label](/path) or **bold**
-    const parts = text.split(/(\[[^\]]+\]\(\/[^)]+\)|\*\*[^*]+\*\*)/g);
+    // Regex matches [Label](/path), **bold**, or *italic*
+    const parts = text.split(/(\[[^\]]+\]\(\/[^)]+\)|\*\*[^*]+\*\*|\*[^*]+\*)/g);
 
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
@@ -241,20 +315,31 @@ export default function AIAssistant({ open, onToggle }: Props) {
         );
       }
 
+      if (part.startsWith('*') && part.endsWith('*') && !part.startsWith('**')) {
+        return (
+          <em key={i} className="text-gray-700 italic">
+            {part.slice(1, -1)}
+          </em>
+        );
+      }
+
       const linkMatch = part.match(/^\[([^\]]+)\]\((\/[^)]+)\)$/);
       if (linkMatch) {
         const linkLabel = linkMatch[1];
         const linkPath = linkMatch[2];
-        return (
-          <button
-            key={i}
-            type="button"
-            onClick={() => handleActionClick(linkPath)}
-            className="inline-flex items-center text-violet-700 font-medium underline underline-offset-2 hover:text-violet-900 hover:bg-violet-50 px-1 py-0.5 rounded transition-colors text-left"
-          >
-            {linkLabel} ↗
-          </button>
-        );
+        if (ALLOWED_NAV_PATHS.includes(linkPath)) {
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => handleActionClick(linkPath)}
+              className="inline-flex items-center text-violet-700 font-medium underline underline-offset-2 hover:text-violet-900 hover:bg-violet-50 px-1 py-0.5 rounded transition-colors text-left cursor-pointer"
+            >
+              {linkLabel} ↗
+            </button>
+          );
+        }
+        return <span key={i} className="font-medium text-violet-700">{linkLabel}</span>;
       }
 
       return part;
@@ -364,8 +449,8 @@ export default function AIAssistant({ open, onToggle }: Props) {
                     {/* Retry button on error */}
                     {msg.isError && lastFailedQuery && (
                       <button
-                        onClick={() => handleSend(lastFailedQuery)}
-                        className="mt-2 text-xs font-semibold bg-red-100 hover:bg-red-200 text-red-800 px-2.5 py-1 rounded-lg transition-colors inline-flex items-center gap-1"
+                        onClick={handleRetry}
+                        className="mt-2 text-xs font-semibold bg-red-100 hover:bg-red-200 text-red-800 px-2.5 py-1 rounded-lg transition-colors inline-flex items-center gap-1 cursor-pointer"
                       >
                         🔄 Retry
                       </button>
@@ -376,16 +461,18 @@ export default function AIAssistant({ open, onToggle }: Props) {
                 {/* Interactive Navigation Action Buttons */}
                 {msg.actions && msg.actions.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-2 ml-8">
-                    {msg.actions.map((act) => (
-                      <button
-                        key={act.path}
-                        onClick={() => handleActionClick(act.path)}
-                        className="text-xs font-medium text-violet-700 bg-white border border-violet-200 hover:bg-violet-50 hover:border-violet-300 px-3 py-1.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 group"
-                      >
-                        <span>{act.label}</span>
-                        <span className="text-violet-400 group-hover:translate-x-0.5 transition-transform">→</span>
-                      </button>
-                    ))}
+                    {msg.actions
+                      .filter((act) => ALLOWED_NAV_PATHS.includes(act.path))
+                      .map((act) => (
+                        <button
+                          key={act.path}
+                          onClick={() => handleActionClick(act.path)}
+                          className="text-xs font-medium text-violet-700 bg-white border border-violet-200 hover:bg-violet-50 hover:border-violet-300 px-3 py-1.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 group cursor-pointer"
+                        >
+                          <span>{act.label}</span>
+                          <span className="text-violet-400 group-hover:translate-x-0.5 transition-transform">→</span>
+                        </button>
+                      ))}
                   </div>
                 )}
               </div>
